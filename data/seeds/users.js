@@ -15,7 +15,7 @@ exports.seed = function(knex) {
         },
         {
             "username": "slytherinslaps",
-            "password": "wh@tWh@+"
+            "password": "wh@tWh@+$lytherin"
         },
       ])
     })
