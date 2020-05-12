@@ -6,21 +6,29 @@ const session = require("express-session")
 const usersRouter = require("./users/users-router")
 const authRouter = require("./auth/auth-router")
 const restricted = require("./middleware/restrict")
+const knexSessionStore = require("connect-session-knex")(session)
 
 const server = express()
 const port = process.env.PORT || 4000
 
 const sessionConfig = {
-	name: "monster",
+	name: "sugar",
 	secret: "Don't tell nothing, don't tell nothing",
 	cookie: 
 		{
-			maxAge: 1000 * 60 * 60,
+			maxAge: 3600 * 1000,
 			secure: false, // in production this should be true
 			httpOnly: true, // no access from JS
 		},
 	resave: false,
-	saveUninitialized: true // For compliance with GDPR
+	saveUninitialized: true, // For compliance with GDPR
+	store: new knexSessionStore({
+		knex: require("./data/config.js"),
+		tableName: "sessions",
+		sidfieldname: "sid",
+		createTable: true,
+		clearInterval: 3600 * 1000
+	})
 }
 
 server.use(helmet())

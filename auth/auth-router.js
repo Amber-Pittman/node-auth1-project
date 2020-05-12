@@ -13,8 +13,8 @@ router.post("/register", (req, res, next) => {
     userData.password = hash;
 
     Users.add(userData)
-        .then(user => {
-            res.json(user)
+        .then(saved => {
+            res.status(200).json({saved})
         })
         .catch(next)
 })
@@ -33,7 +33,7 @@ router.post("/login", (req, res, next) => {
                 res.status(200).json({ 
                     hello: `${user.username}! Welcome!`
                 })
-                } else {
+            } else {
                 res.status(401).json({ 
                     message: "You shall not pass!" 
                 })
@@ -49,24 +49,18 @@ router.post("/login", (req, res, next) => {
         
     })
 
-router.get("/users", (req, res, next) => {
+router.get("/logout", (req, res, next) => {
     if (req.session) {
-        req.session.destroy(error => {
-            if (error) {
-            res.status(500).json({
-                message: "You can checkout any time you like, but you can never leave"
-            })
+        req.session.destroy((err) => {
+            if (err) {
+                res.send("Unable to logout.")
             } else {
             res.status(200).json({ 
                 message: "You've been logged out." 
             })}
         })
-    } else {
-      res.status(200).json({ 
-          message: "I have no memory of you" 
-        });
     }
-  });
+})
   
 
 module.exports = router
