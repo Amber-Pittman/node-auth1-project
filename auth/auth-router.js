@@ -5,62 +5,55 @@ const Users = require("../users/users-model")
 const router = express.Router()
 
 router.post("/register", (req, res, next) => {
-    const userData = req.body
+    const user = req.body
+    const hash = bcrypt.hashSync(user.password, 8)
 
-    const ROUNDS = process.env.HASHING_ROUNDS || 8;
-    const hash = bcrypt.hashSync(userData.password, ROUNDS)
+    user.password = hash
 
-    userData.password = hash;
-
-    Users.add(userData)
+    Users.add(user)
         .then(saved => {
             res.status(200).json({saved})
         })
-        .catch(next)
+        .catch(err => {
+            res.status(500).json({
+                message: "Problem with the DB", error: err
+            })
+        })
 })
 
-router.post("/login", (req, res, next) => {
-    const { username, password } = req.body
+router.post("/login", (req, res) => {
+    const {username, password} = req.body
 
-    Users.findBy({username})
+    Users.findBy({username})        //lookup in the database
+        // Make comparison between PW guess and actual PW
         .then(([user]) => {
             if (user && bcrypt.compareSync(password, user.password)) {
-                req.session.user = {
-                    id: user.id,
-                    username: user.username
-                }
-
-                res.status(200).json({ 
-                    hello: `${user.username}! Welcome!`
+                req.session.user = username
+                res.status(200).json({
+                    message: "Welcome!"
                 })
             } else {
-                res.status(401).json({ 
-                    message: "You shall not pass!" 
+                res.status(401).json({
+                    message: "Invalid credentials"
                 })
             }
+        }) 
+        .catch(err => {
+            res.status(500).json({
+                message: "problem with the db", error: err
+            })
         })
-        
-        .catch(next)
-        // .catch(error => {
-        //     res.status(500).json({
-        //         message: "Cannot find user."
-        //     })
-        // })
-        
-    })
-
-router.get("/logout", (req, res, next) => {
-    if (req.session) {
-        req.session.destroy((err) => {
-            if (err) {
-                res.send("Unable to logout.")
-            } else {
-            res.status(200).json({ 
-                message: "You've been logged out." 
-            })}
-        })
-    }
 })
-  
+
+// Logout using GET
+router.get("/logout", (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            res.send("Unable to logout.")
+        } else {
+            res.send("Logged out.")
+        }
+    })
+})
 
 module.exports = router
